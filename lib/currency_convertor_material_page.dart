@@ -1,5 +1,7 @@
+import 'package:currency_convertor/services/exchange_rate_graph.dart';
 import 'package:flutter/material.dart';
 import '../services/currency_api_service.dart';
+import '../widgets/exchange_rate_graph.dart';
 
 class CurrencyConvertorMaterialPage extends StatefulWidget {
   const CurrencyConvertorMaterialPage({super.key});
@@ -16,12 +18,14 @@ class _CurrencyConvertorMaterialPageState
   bool isLoading = false;
 
   bool showTrendCard = false;
+  bool isGraphLoading = false;
 
   String selectedCurrency = 'USD';
   final List<String> currencies = ['USD', 'EUR', 'GBP', 'JPY'];
 
-  final TextEditingController textEditingController = TextEditingController();
+  List<double> historicalRates = [];
 
+  final TextEditingController textEditingController = TextEditingController();
   Future<void> convertCurrency() async {
     final double amount = double.tryParse(textEditingController.text) ?? 0;
 
@@ -32,9 +36,7 @@ class _CurrencyConvertorMaterialPageState
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       final double rate = await CurrencyApiService.getRate(selectedCurrency);
@@ -43,15 +45,58 @@ class _CurrencyConvertorMaterialPageState
         currentRate = rate;
         result = amount * rate;
       });
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error fetching exchange rate')),
       );
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
+  }
+
+  void showCalculationHelp() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'How is this calculated?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            const Text('Formula:'),
+            const SizedBox(height: 4),
+            const Text('Amount × Exchange Rate = Converted Value'),
+            const SizedBox(height: 12),
+            Text(
+              '${textEditingController.text} $selectedCurrency '
+              '× ${currentRate.toStringAsFixed(2)} '
+              '= ${result.toStringAsFixed(2)} INR',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> loadHistoricalData() async {
+    setState(() => isGraphLoading = true);
+
+    try {
+      final data = await CurrencyApiService.getHistoricalRates(
+        selectedCurrency,
+      );
+      setState(() => historicalRates = data);
+    } catch (_) {}
+
+    setState(() => isGraphLoading = false);
   }
 
   @override
@@ -67,7 +112,7 @@ class _CurrencyConvertorMaterialPageState
         backgroundColor: const Color.fromARGB(255, 44, 170, 130),
         title: const Text(
           'Currency Converter',
-          style: TextStyle(color: Color.fromARGB(255, 23, 3, 3), fontSize: 20),
+          style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
         elevation: 0,
@@ -79,84 +124,49 @@ class _CurrencyConvertorMaterialPageState
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  ElevatedButton(
-                    onPressed: convertCurrency,
-                    style: const ButtonStyle(
-                      backgroundColor: WidgetStatePropertyAll(Colors.black),
-                      foregroundColor: WidgetStatePropertyAll(Colors.white),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text('Convert'),
-                  ),
-                  if (result != 0)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        '${textEditingController.text} $selectedCurrency = '
-                        '${result.toStringAsFixed(2)} INR',
-
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 2, 32, 29),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Converted Amount',
+                          style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${result.toStringAsFixed(2)} INR',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  if (result != 0)
+                    TextButton(
+                      onPressed: showCalculationHelp,
+                      child: const Text(
+                        'How is this calculated?',
+                        style: TextStyle(decoration: TextDecoration.underline),
                       ),
                     ),
-                  TextButton(
-                    onPressed: result == 0
-                        ? null
-                        : () {
-                            showModalBottomSheet(
-                              context: context,
-                              builder: (_) {
-                                return Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'How is this calculated?',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      const Text('Formula:'),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                        'Amount × Exchange Rate = Converted Value',
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        '${textEditingController.text} $selectedCurrency '
-                                        '× ${currentRate.toStringAsFixed(2)} '
-                                        '= ${result.toStringAsFixed(2)} INR',
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                    child: const Text(
-                      'How is this calculated?',
-                      style: TextStyle(decoration: TextDecoration.underline),
-                    ),
-                  ),
 
                   DropdownButtonFormField<String>(
                     initialValue: selectedCurrency,
-                    items: currencies.map((currency) {
-                      return DropdownMenuItem(
-                        value: currency,
-                        child: Text(currency),
-                      );
-                    }).toList(),
+                    items: currencies
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
                     onChanged: (value) {
                       setState(() {
                         selectedCurrency = value!;
+                        historicalRates.clear();
                       });
                     },
                     decoration: const InputDecoration(
@@ -188,14 +198,21 @@ class _CurrencyConvertorMaterialPageState
 
                   ElevatedButton(
                     onPressed: convertCurrency,
-                    style: const ButtonStyle(
-                      backgroundColor: WidgetStatePropertyAll(Colors.black),
-                      foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 14,
+                      ),
                     ),
                     child: const Text('Convert'),
                   ),
 
-                  const SizedBox(height: 160), // space for footer
+                  const SizedBox(height: 160),
                 ],
               ),
             ),
@@ -204,35 +221,26 @@ class _CurrencyConvertorMaterialPageState
             left: 16,
             bottom: 16,
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  showTrendCard = !showTrendCard;
-                });
+              onTap: () async {
+                setState(() => showTrendCard = !showTrendCard);
+                if (historicalRates.isEmpty) {
+                  await loadHistoricalData();
+                }
               },
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.black,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 8,
-                    ),
-                  ],
                 ),
-                child: const Icon(
-                  Icons.show_chart,
-                  color: Colors.white,
-                  size: 22,
-                ),
+                child: const Icon(Icons.show_chart, color: Colors.white),
               ),
             ),
           ),
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             left: 16,
-            bottom: showTrendCard ? 80 : -220,
+            bottom: showTrendCard ? 80 : -240,
             child: Material(
               elevation: 8,
               borderRadius: BorderRadius.circular(16),
@@ -248,10 +256,7 @@ class _CurrencyConvertorMaterialPageState
                   children: [
                     const Text(
                       'Exchange Rate Insight',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -259,18 +264,14 @@ class _CurrencyConvertorMaterialPageState
                       '${currentRate.toStringAsFixed(2)} INR',
                       style: const TextStyle(fontSize: 13),
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      height: 60,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'Trend graph will appear here',
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
-                      ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 120,
+                      child: isGraphLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : historicalRates.isEmpty
+                          ? const Center(child: Text('No data'))
+                          : ExchangeRateGraph(rates: historicalRates),
                     ),
                   ],
                 ),

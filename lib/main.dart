@@ -5,6 +5,9 @@ void main() {
   runApp(const MyApp());
 }
 
+List<double> historicalRates = [];
+bool isGraphLoading = false;
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
