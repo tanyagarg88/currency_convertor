@@ -1,16 +1,44 @@
-# currency_convertor
+💱 CurrenSense – Currency Converter App
+# About the Project
 
-A new Flutter project.
+CurrenSense is a Flutter-based mobile application that provides real-time currency conversion using live exchange rates. The app focuses on clean UI, dynamic data, and learning-oriented features, making it suitable for both everyday users and students.
 
-## Getting Started
+# What the Project Does
 
-This project is a starting point for a Flutter application.
+The application allows users to:
 
-A few resources to get you started if this is your first Flutter project:
+Convert one currency into another using live exchange rates
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+View how currency values change over time using trend graphs
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Understand the logic and formula behind currency conversion
+
+Interact with a modern, gradient-based user interface
+
+# Functionalities
+
+Live currency conversion using API
+
+Dynamic currency selection with search
+
+Currency swap feature (From ↔ To)
+
+Historical currency trend visualization
+
+“How is this calculated?” explanation feature
+
+Learning Mode (Beginner / Student / Finance)
+
+Professional gradient UI and animations
+
+# Tech Stack
+
+Flutter (Dart) – Frontend development
+
+REST API – Live exchange rate data
+
+HTTP package – API integration
+
+ValueNotifier & Stateful Widgets – State management
+
+Custom Widgets – UI components and graphs
