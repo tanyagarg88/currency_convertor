@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'package:currency_convertor/currency_convertor_material_page.dart';
-import 'package:currency_convertor/screens/main_navigation_page.dart';
 import 'package:flutter/material.dart';
+import 'package:currency_convertor/screens/main_navigation_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,12 +38,12 @@ class _SplashScreenState extends State<SplashScreen> {
             Positioned(
               top: -50,
               left: -50,
-              child: _circle(120, Colors.white.withOpacity(0.15)),
+              child: _circle(120, Colors.white24),
             ),
             Positioned(
               bottom: -40,
               right: -40,
-              child: _circle(140, Colors.white.withOpacity(0.12)),
+              child: _circle(140, Colors.white24),
             ),
             Center(
               child: Column(
@@ -53,16 +52,16 @@ class _SplashScreenState extends State<SplashScreen> {
                   Icon(Icons.currency_exchange, size: 90, color: Colors.white),
                   SizedBox(height: 20),
                   Text(
-                    'Currency Converter',
+                    'CurrenSense',
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Instantly convert currency\nusing live exchange rates',
+                    'Smart Currency Intelligence',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.white70),
                   ),

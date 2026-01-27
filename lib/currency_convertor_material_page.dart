@@ -4,6 +4,8 @@ import '../screens/all_currencies_page.dart';
 import '../screens/currency_trends_page.dart';
 import '../learning/learning_mode_controller.dart';
 import '../theme/app_gradient.dart';
+import '../config/app_config.dart';
+import '../services/fee_engine.dart';
 
 class CurrencyConvertorMaterialPage extends StatefulWidget {
   const CurrencyConvertorMaterialPage({super.key});
@@ -17,6 +19,7 @@ class _CurrencyConvertorMaterialPageState
     extends State<CurrencyConvertorMaterialPage> {
   double result = 0.0;
   double currentRate = 0.0;
+  double netResult = 0;
   bool isLoading = false;
 
   String fromCurrency = 'USD';
@@ -37,11 +40,19 @@ class _CurrencyConvertorMaterialPageState
     setState(() => isLoading = true);
 
     try {
-      final rate = await CurrencyApiService.getRate(fromCurrency, toCurrency);
+      final exchangeRate = await CurrencyApiService.getRate(
+        fromCurrency,
+        toCurrency,
+      );
+      final feeAdjustedRate = FeeEngine.calculateNetRate(
+        marketRate: exchangeRate.rate,
+        feeModel: AppConfig.defaultFees,
+      );
 
       setState(() {
-        currentRate = rate;
-        result = amount * rate;
+        currentRate = exchangeRate.rate;
+        result = amount * exchangeRate.rate;
+        netResult = amount * feeAdjustedRate;
       });
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,6 +99,67 @@ class _CurrencyConvertorMaterialPageState
               '× ${currentRate.toStringAsFixed(2)} '
               '= ${result.toStringAsFixed(2)} $toCurrency',
             ),
+            const SizedBox(height: 12),
+
+            const Text(
+              'After fees:',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+
+            Text(
+              netResult.toStringAsFixed(2),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ExpansionTile(
+              title: const Text(
+                'Fee details',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              children: [
+                ListTile(
+                  title: const Text('Platform fee'),
+                  trailing: Text(
+                    '${AppConfig.defaultFees.platformFeePercent}%',
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Bank margin'),
+                  trailing: Text('${AppConfig.defaultFees.bankMarginPercent}%'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showFeeNotification(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Fee Insight',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Final amount includes platform fee '
+              '(${AppConfig.defaultFees.platformFeePercent}%) '
+              'and bank margin '
+              '(${AppConfig.defaultFees.bankMarginPercent}%).',
+            ),
           ],
         ),
       ),
@@ -102,8 +174,49 @@ class _CurrencyConvertorMaterialPageState
     );
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text(
+          'CurrenSense',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none),
+                onPressed: () {
+                  showFeeNotification(context);
+                },
+              ),
+              Positioned(
+                right: 10,
+                top: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+
       body: Container(
-        decoration: const BoxDecoration(gradient: AppGradient.mainGradient),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2196F3), Color(0xFF7B1FA2)],
+          ),
+        ),
+
         child: SafeArea(
           child: Stack(
             children: [
@@ -119,21 +232,6 @@ class _CurrencyConvertorMaterialPageState
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-
-                        const Text(
-                          'Currency Converter',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'check live rates and more',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-
                         const SizedBox(height: 30),
                         Container(
                           padding: const EdgeInsets.all(16),

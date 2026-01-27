@@ -1,3 +1,4 @@
+import 'package:currency_convertor/models/exchange_rate_model.dart';
 import 'package:currency_convertor/services/exchange_rate_graph.dart';
 import 'package:flutter/material.dart';
 import '../services/currency_api_service.dart';
@@ -12,9 +13,9 @@ class CurrencyTrendsPage extends StatefulWidget {
 class _CurrencyTrendsPageState extends State<CurrencyTrendsPage> {
   bool isLoading = true;
 
-  List<double> usdTrend = [];
-  List<double> eurTrend = [];
-  List<double> inrTrend = [];
+  List<ExchangeRate> usdTrend = [];
+  List<ExchangeRate> eurTrend = [];
+  List<ExchangeRate> inrTrend = [];
 
   @override
   void initState() {
@@ -24,9 +25,9 @@ class _CurrencyTrendsPageState extends State<CurrencyTrendsPage> {
 
   Future<void> loadTrendData() async {
     try {
-      usdTrend = await CurrencyApiService.getHistoricalRates('USD');
-      eurTrend = await CurrencyApiService.getHistoricalRates('EUR');
-      inrTrend = await CurrencyApiService.getHistoricalRates('INR');
+      usdTrend = await CurrencyApiService.getHistoricalRates('USD', 'INR');
+      eurTrend = await CurrencyApiService.getHistoricalRates('EUR', 'INR');
+      inrTrend = await CurrencyApiService.getHistoricalRates('INR', 'USD');
     } catch (_) {}
 
     setState(() => isLoading = false);
@@ -109,7 +110,7 @@ class _CurrencyTrendsPageState extends State<CurrencyTrendsPage> {
   Widget _trendCard({
     required String title,
     required Color color,
-    required List<double> rates,
+    required List<ExchangeRate> rates,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -129,7 +130,11 @@ class _CurrencyTrendsPageState extends State<CurrencyTrendsPage> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(height: 120, child: ExchangeRateGraph(rates: rates)),
+          SizedBox(
+            height: 120,
+            child: ExchangeRateGraph(rates: rates.map((e) => e.rate).toList()),
+          ),
+
           const SizedBox(height: 8),
           const Text(
             'Last 7 days trend',
