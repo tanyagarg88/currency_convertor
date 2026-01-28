@@ -1,3 +1,4 @@
+import 'package:currency_convertor/models/exchange_rate_model.dart';
 import 'package:flutter/material.dart';
 import '../services/currency_api_service.dart';
 import '../screens/all_currencies_page.dart';
@@ -25,7 +26,6 @@ class _CurrencyConvertorMaterialPageState
   String fromCurrency = 'USD';
   String toCurrency = 'INR';
   bool isSwapped = false;
-
   final TextEditingController textEditingController = TextEditingController();
   Future<void> convertCurrency() async {
     final amount = double.tryParse(textEditingController.text) ?? 0;
@@ -40,10 +40,14 @@ class _CurrencyConvertorMaterialPageState
     setState(() => isLoading = true);
 
     try {
-      final exchangeRate = await CurrencyApiService.getRate(
+      final response = await CurrencyApiService.getRate(
         fromCurrency,
         toCurrency,
       );
+
+      final exchangeRate = response['rate'] as ExchangeRate;
+      final volatility = response['volatility'];
+
       final feeAdjustedRate = FeeEngine.calculateNetRate(
         marketRate: exchangeRate.rate,
         feeModel: AppConfig.defaultFees,
@@ -53,6 +57,9 @@ class _CurrencyConvertorMaterialPageState
         currentRate = exchangeRate.rate;
         result = amount * exchangeRate.rate;
         netResult = amount * feeAdjustedRate;
+
+        // OPTIONAL (for later UI)
+        var lastVolatility = volatility;
       });
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(

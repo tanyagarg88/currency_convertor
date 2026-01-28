@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../learning/learning_mode_controller.dart';
 import '../theme/app_gradient.dart';
+import 'exchange_rate_insight_screen.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -26,6 +27,9 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             const SizedBox(height: 16),
 
+            // =========================
+            // LEARNING MODE SECTION
+            // =========================
             const Text(
               'Learning Mode',
               style: TextStyle(
@@ -76,6 +80,47 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text(
               'The app adapts its explanations and insights based on your selected level.',
               style: TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+
+            const SizedBox(height: 28),
+            const Text(
+              'Learning & Insights',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Card(
+              color: Colors.white.withOpacity(0.9),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.lightbulb_outline,
+                  color: Colors.deepPurple,
+                ),
+                title: const Text(
+                  'Why exchange rates change',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  'Understand the factors behind currency fluctuations',
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ExchangeRateInsightScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),

@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
 import '../models/exchange_rate_model.dart';
+import '../models/volatility_result.dart';
 
 class CurrencyApiService {
-  /// Stores the previously fetched rate (used for volatility detection)
+  /// Stores the last fetched exchange rate (for volatility comparison)
   static ExchangeRate? _previousRate;
 
-  /// Fetch all available currency codes
+  /// Get all available currency codes
   static Future<List<String>> getAllCurrencies() async {
     final response = await http.get(
       Uri.parse('https://api.exchangerate-api.com/v4/latest/USD'),
@@ -22,8 +24,14 @@ class CurrencyApiService {
     return rates.keys.toList();
   }
 
-  /// Fetch exchange rate between two currencies
-  static Future<ExchangeRate> getRate(String from, String to) async {
+  /// Fetch exchange rate + optional volatility info
+  ///
+  /// Returns:
+  /// {
+  ///   'rate': ExchangeRate,
+  ///   'volatility': VolatilityResult? (null if first fetch)
+  /// }
+  static Future<Map<String, dynamic>> getRate(String from, String to) async {
     final response = await http.get(
       Uri.parse('https://api.exchangerate-api.com/v4/latest/USD'),
     );
@@ -41,32 +49,39 @@ class CurrencyApiService {
 
     final double fromRate = (rates[from] as num).toDouble();
     final double toRate = (rates[to] as num).toDouble();
-    final double rate = toRate / fromRate;
+    final double rateValue = toRate / fromRate;
 
+    // Create current exchange rate object (OLD FEATURE SAFE)
     final ExchangeRate currentRate = ExchangeRate(
       baseCurrency: from,
       targetCurrency: to,
-      rate: rate,
+      rate: rateValue,
       timestamp: DateTime.now(),
     );
 
-    // Volatility calculation (console only for now)
+    VolatilityResult? volatility;
+
+    // Calculate volatility only if previous rate exists
     if (_previousRate != null &&
         _previousRate!.baseCurrency == from &&
         _previousRate!.targetCurrency == to) {
       final double oldRate = _previousRate!.rate;
-      final double percentChange = ((rate - oldRate) / oldRate) * 100;
+      final double percentChange = ((rateValue - oldRate) / oldRate) * 100;
 
-      print(
-        'Volatility (${from} to ${to}): ${percentChange.toStringAsFixed(2)}%',
+      volatility = VolatilityResult(
+        percentChange: percentChange.abs(),
+        isIncrease: percentChange >= 0,
+        time: DateTime.now(),
       );
     }
 
+    // Store current rate for next comparison
     _previousRate = currentRate;
-    return currentRate;
+
+    return {'rate': currentRate, 'volatility': volatility};
   }
 
-  /// Mock historical data for trends & graphs
+  /// Mock historical data for trends & graphs (unchanged)
   static Future<List<ExchangeRate>> getHistoricalRates(
     String base,
     String target,
