@@ -1,10 +1,10 @@
 import 'package:currency_convertor/models/exchange_rate_model.dart';
+import 'package:currency_convertor/models/volatility_result.dart';
+import 'package:currency_convertor/screens/exchange_rate_insight_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/currency_api_service.dart';
 import '../screens/all_currencies_page.dart';
-import '../screens/currency_trends_page.dart';
 import '../learning/learning_mode_controller.dart';
-import '../theme/app_gradient.dart';
 import '../config/app_config.dart';
 import '../services/fee_engine.dart';
 
@@ -18,6 +18,7 @@ class CurrencyConvertorMaterialPage extends StatefulWidget {
 
 class _CurrencyConvertorMaterialPageState
     extends State<CurrencyConvertorMaterialPage> {
+  VolatilityResult? lastVolatility;
   double result = 0.0;
   double currentRate = 0.0;
   double netResult = 0;
@@ -57,8 +58,7 @@ class _CurrencyConvertorMaterialPageState
         currentRate = exchangeRate.rate;
         result = amount * exchangeRate.rate;
         netResult = amount * feeAdjustedRate;
-
-        // OPTIONAL (for later UI)
+        // ignore: unused_local_variable
         var lastVolatility = volatility;
       });
     } catch (_) {
@@ -337,7 +337,6 @@ class _CurrencyConvertorMaterialPageState
                           builder: (context, mode, _) {
                             return Column(
                               children: [
-                                // ✅ ALWAYS SHOW RESULT
                                 Text(
                                   '${result.toStringAsFixed(2)} $toCurrency',
                                   style: const TextStyle(
@@ -348,8 +347,6 @@ class _CurrencyConvertorMaterialPageState
                                 ),
 
                                 const SizedBox(height: 8),
-
-                                // 🎓 STUDENT & FINANCE: show formula button
                                 if (mode == LearningMode.student ||
                                     mode == LearningMode.finance)
                                   TextButton(
@@ -362,8 +359,6 @@ class _CurrencyConvertorMaterialPageState
                                       ),
                                     ),
                                   ),
-
-                                // 📊 FINANCE ONLY: show insight text
                                 if (mode == LearningMode.finance)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
@@ -395,18 +390,12 @@ class _CurrencyConvertorMaterialPageState
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const CurrencyTrendsPage(),
+                        builder: (_) => ExchangeRateInsightScreen(
+                          volatility: lastVolatility!,
+                        ),
                       ),
                     );
                   },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.show_chart, color: Colors.white),
-                  ),
                 ),
               ),
             ],

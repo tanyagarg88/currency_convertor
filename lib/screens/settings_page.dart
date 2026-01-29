@@ -26,10 +26,6 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.all(16),
           children: [
             const SizedBox(height: 16),
-
-            // =========================
-            // LEARNING MODE SECTION
-            // =========================
             const Text(
               'Learning Mode',
               style: TextStyle(

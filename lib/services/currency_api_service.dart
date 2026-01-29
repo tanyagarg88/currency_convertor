@@ -5,10 +5,7 @@ import '../models/exchange_rate_model.dart';
 import '../models/volatility_result.dart';
 
 class CurrencyApiService {
-  /// Stores the last fetched exchange rate (for volatility comparison)
   static ExchangeRate? _previousRate;
-
-  /// Get all available currency codes
   static Future<List<String>> getAllCurrencies() async {
     final response = await http.get(
       Uri.parse('https://api.exchangerate-api.com/v4/latest/USD'),
@@ -24,13 +21,6 @@ class CurrencyApiService {
     return rates.keys.toList();
   }
 
-  /// Fetch exchange rate + optional volatility info
-  ///
-  /// Returns:
-  /// {
-  ///   'rate': ExchangeRate,
-  ///   'volatility': VolatilityResult? (null if first fetch)
-  /// }
   static Future<Map<String, dynamic>> getRate(String from, String to) async {
     final response = await http.get(
       Uri.parse('https://api.exchangerate-api.com/v4/latest/USD'),
@@ -50,8 +40,6 @@ class CurrencyApiService {
     final double fromRate = (rates[from] as num).toDouble();
     final double toRate = (rates[to] as num).toDouble();
     final double rateValue = toRate / fromRate;
-
-    // Create current exchange rate object (OLD FEATURE SAFE)
     final ExchangeRate currentRate = ExchangeRate(
       baseCurrency: from,
       targetCurrency: to,
@@ -60,8 +48,6 @@ class CurrencyApiService {
     );
 
     VolatilityResult? volatility;
-
-    // Calculate volatility only if previous rate exists
     if (_previousRate != null &&
         _previousRate!.baseCurrency == from &&
         _previousRate!.targetCurrency == to) {
@@ -74,14 +60,11 @@ class CurrencyApiService {
         time: DateTime.now(),
       );
     }
-
-    // Store current rate for next comparison
     _previousRate = currentRate;
 
     return {'rate': currentRate, 'volatility': volatility};
   }
 
-  /// Mock historical data for trends & graphs (unchanged)
   static Future<List<ExchangeRate>> getHistoricalRates(
     String base,
     String target,

@@ -14,8 +14,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    CurrencyConvertorMaterialPage(), // Home
-    CurrencyTrendsPage(), // Trends
+    CurrencyConvertorMaterialPage(),
+    CurrencyTrendsPage(),
     SettingsPage(),
   ];
 
